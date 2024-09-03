@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản Đồ Y Tế</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="header">
+        <div id="menu-icon">☰</div>
+        <div id="nav-items">
+            <div class="nav-item">Giới thiệu</div>
+            <div class="nav-item">Trang chủ</div>
+            <div class="nav-item">Về chúng tôi</div>
+        </div>
+        <div id="user-icon">U</div>
+    </div>
+    <div id="map">
+        <div id="floating-search">
+            <div id="floating-search-icon">🔍</div>
+            <input type="text" placeholder="Tìm kiếm trên bản đồ">
+        </div>
+    </div>
+    <div id="voice-input">🎤</div>
+    <!-- Hộp thông báo khoảng cách -->
+    <div id="distance-box">
+        <div id="distance"></div>
+    </div>
+
+
+
+    <script src="script.js"></script>
+</body>
+</html>

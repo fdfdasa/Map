@@ -1,0 +1,1 @@
+var hospitalCoords = [10.790386, 106.65333];

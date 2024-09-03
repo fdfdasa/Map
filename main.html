@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        html, body, #map { 
+            height: 90%; 
+            margin: 0; 
+        }
+        #control {
+            height: 10%;
+            text-align: center;
+            background-color: #f9f9f9;
+            padding: 10px;
+        }
+    </style>
+    <title>Bản Đồ Việt Nam</title>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="control">
+        <button id="locate-btn">Tìm vị trí của tôi và tính khoảng cách đến Bệnh Viện</button>
+        <div id="distance"></div>
+    </div>
+    <script>
+        // Tọa độ giới hạn bản đồ (gần đúng) cho Việt Nam
+        var vietnamBounds = [
+            [8.1790665, 102.14441], // Tây Nam
+            [23.393395, 109.4646833]  // Đông Bắc
+        ];
+
+        // Tạo bản đồ và giới hạn trong khu vực Việt Nam
+        var map = L.map('map', {
+            center: [16.047079, 108.206230], // Trung tâm ban đầu ở Việt Nam
+            zoom: 6,
+            minZoom: 5,
+            maxZoom: 18,
+            maxBounds: vietnamBounds,
+            maxBoundsViscosity: 1.0
+        });
+
+        L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=JQQlTlGt6mgmsQLj7Hrr', {
+            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+            tileSize: 512, 
+            zoomOffset: -1, 
+            minZoom: 5,
+            maxZoom: 18
+        }).addTo(map);  
+
+        // Tọa độ của Bệnh viện Thống Nhất, TP. Hồ Chí Minh
+        var hospitalCoords = [10.790386, 106.65333];
+
+        // Thêm marker tại Bệnh viện Thống Nhất
+        L.marker(hospitalCoords).addTo(map)
+            .bindPopup('<b>Bệnh Viện Thống Nhất</b><br>Số 1, Lý Thường Kiệt, Phường 7, Quận Tân Bình, TP. HCM')
+            .openPopup();
+
+        // Hàm để tính toán và hiển thị tuyến đường
+        function calculateAndDisplayRoute(userCoords) {
+            // Xóa tuyến đường cũ nếu có
+            if (window.routeLayer) {
+                map.removeLayer(window.routeLayer);
+            }
+
+            // Gọi API OSRM
+            fetch(`https://router.project-osrm.org/route/v1/driving/${userCoords[1]},${userCoords[0]};${hospitalCoords[1]},${hospitalCoords[0]}?overview=full&geometries=geojson`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                        const route = data.routes[0];
+                        const distance = route.distance / 1000; // Chuyển đổi từ mét sang km
+                        const duration = Math.round(route.duration / 60); // Chuyển đổi từ giây sang phút
+
+                        // Hiển thị thông tin khoảng cách và thời gian
+                        document.getElementById('distance').innerHTML = `Khoảng cách theo tuyến đường là: ${distance.toFixed(2)} km, mất khoảng: ${duration} phút.`;
+
+                        // Hiển thị tuyến đường trên bản đồ
+                        window.routeLayer = L.geoJSON(route.geometry).addTo(map);
+                        map.fitBounds(window.routeLayer.getBounds());
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Không thể tính toán tuyến đường. Vui lòng thử lại sau.');
+                });
+        }
+
+        // Xử lý sự kiện khi nhấn nút "Tìm vị trí của tôi và tính khoảng cách đến Bệnh Viện"
+        document.getElementById('locate-btn').onclick = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var userCoords = [position.coords.latitude, position.coords.longitude];
+
+                    // Thêm marker cho vị trí người dùng
+                    L.marker(userCoords).addTo(map)
+                        .bindPopup('<b>Vị trí của bạn</b>').openPopup();
+
+                    // Tự động zoom và di chuyển bản đồ đến vị trí người dùng
+                    map.setView(userCoords, 13);
+
+                    // Tính toán và hiển thị tuyến đường
+                    calculateAndDisplayRoute(userCoords);
+
+                }, function() {
+                    alert('Không thể lấy vị trí của bạn.');
+                });
+            } else {
+                alert('Trình duyệt của bạn không hỗ trợ định vị.');
+            }
+        };
+    </script>
+</body>
+</html>
